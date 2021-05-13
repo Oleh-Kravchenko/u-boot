@@ -532,12 +532,7 @@ void fastboot_mmc_flash_write(const char *cmd, void *download_buffer,
 #endif
 
 #if CONFIG_IS_ENABLED(EFI_PARTITION)
-#ifndef CONFIG_FASTBOOT_MMC_USER_SUPPORT
 	if (strcmp(cmd, CONFIG_FASTBOOT_GPT_NAME) == 0) {
-#else
-	if (strcmp(cmd, CONFIG_FASTBOOT_GPT_NAME) == 0 ||
-	    strcmp(cmd, CONFIG_FASTBOOT_MMC_USER_NAME) == 0) {
-#endif
 		dev_desc = fastboot_mmc_get_dev(response);
 		if (!dev_desc)
 			return;
@@ -599,8 +594,28 @@ void fastboot_mmc_flash_write(const char *cmd, void *download_buffer,
 	}
 #endif
 
+#if CONFIG_IS_ENABLED(FASTBOOT_MMC_USER_SUPPORT)
+	if (strcmp(cmd, CONFIG_FASTBOOT_MMC_USER_NAME) == 0) {
+		dev_desc = fastboot_mmc_get_dev(response);
+		if (!dev_desc)
+			return;
+
+		memset(&info, 0, sizeof(info));
+		info.start	= 0;
+		info.size	= dev_desc->lba;
+		info.blksz	= dev_desc->blksz;
+		strlcpy((char *)&info.name, cmd, sizeof(info.name));
+
+		goto write_image;
+	}
+#endif
+
 	if (fastboot_mmc_get_part_info(cmd, &dev_desc, &info, response) < 0)
 		return;
+
+#if CONFIG_IS_ENABLED(FASTBOOT_MMC_USER_SUPPORT)
+write_image:
+#endif
 
 	if (is_sparse_image(download_buffer)) {
 		struct fb_mmc_sparse sparse_priv;
