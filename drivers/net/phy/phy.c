@@ -915,12 +915,11 @@ struct phy_device *phy_find_by_mask(struct mii_dev *bus, uint phy_mask,
 				    phy_interface_t interface)
 {
 	/* Reset the bus */
-	if (bus->reset) {
+	if (bus->reset)
 		bus->reset(bus);
 
-		/* Wait 15ms to make sure the PHY has come out of hard reset */
-		mdelay(15);
-	}
+	/* Wait 15ms to make sure the PHY has come out of hard reset */
+	mdelay(15);
 
 	return get_phy_device_by_mask(bus, phy_mask, interface);
 }
